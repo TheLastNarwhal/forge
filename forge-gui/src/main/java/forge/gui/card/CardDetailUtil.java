@@ -178,7 +178,7 @@ public class CardDetailUtil {
 
     public static String formatCardType(final CardStateView card, final boolean canShow) {
         boolean isInPlay = card.getCard() != null && ZoneType.Battlefield.equals(card.getCard().getZone());
-        String translatedtype = CardTranslation.getTranslatedType(card.getName(), card.getType().toString());
+        String translatedtype = CardTranslation.getTranslatedType(card);
         return canShow ? translatedtype : (card.getState() == CardStateName.FaceDown && isInPlay ? "Creature" : "");
     }
 
@@ -217,17 +217,20 @@ public class CardDetailUtil {
         }
 
         if (card.isAttraction()) {
-            ptText.append(Localizer.getInstance().getMessage("lblLights")).append(": (");
-            Set<Integer> lights = card.getAttractionLights();
-            //TODO: It'd be really nice if the actual lights were drawn as symbols here. Need to look into that...
-            if (lights == null || lights.isEmpty())
-                ptText.append(Localizer.getInstance().getMessage("lblNone"));
-            else
-                ptText.append(StringUtils.join(lights, ", "));
-            ptText.append(")");
+            ptText.append(Localizer.getInstance().getMessage("lblLights")).append(": ");
+            ptText.append(formatAttractionLights(card.getAttractionLights()));
         }
 
         return ptText.toString();
+    }
+
+    public static String formatAttractionLights(Set<Integer> lights) {
+        return (lights.contains(1) ? "{AL1ON} " : "{AL1OFF} ") +
+                (lights.contains(2) ? "{AL2ON} " : "{AL2OFF} ") +
+                (lights.contains(3) ? "{AL3ON} " : "{AL3OFF} ") +
+                (lights.contains(4) ? "{AL4ON} " : "{AL4OFF} ") +
+                (lights.contains(5) ? "{AL5ON} " : "{AL5OFF} ") +
+                (lights.contains(6) ? "{AL6ON}" : "{AL6OFF}");
     }
 
     public static String formatCardId(final CardStateView card) {
@@ -316,8 +319,8 @@ public class CardDetailUtil {
                 needTranslation = false;
         }
         String text = !card.isSplitCard() ?
-            card.getText(state, needTranslation ? CardTranslation.getTranslationTexts(state.getName(), "") : null) :
-            card.getText(state, needTranslation ? CardTranslation.getTranslationTexts(card.getLeftSplitState().getName(), card.getRightSplitState().getName()) : null );
+            card.getText(state, needTranslation ? CardTranslation.getTranslationTexts(state) : null) :
+            card.getText(state, needTranslation ? CardTranslation.getTranslationTexts(card.getLeftSplitState(), card.getRightSplitState()) : null );
 
         // Bracket P/T for Level up
         if (text.contains("LEVEL")) {
@@ -390,7 +393,7 @@ public class CardDetailUtil {
         // counter text
         if (card.getCounters() != null) {
             for (final Entry<CounterType, Integer> c : card.getCounters().entrySet()) {
-                if (c.getValue().intValue() != 0) {
+                if (c.getValue() != 0) {
                     if (area.length() != 0) {
                         area.append("\n");
                     }

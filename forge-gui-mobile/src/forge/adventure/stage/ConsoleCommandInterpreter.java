@@ -193,7 +193,7 @@ public class ConsoleCommandInterpreter {
         });
         registerCommand(new String[]{"leave"}, s -> {
             if (!MapStage.getInstance().isInMap()) return "not on a map";
-            MapStage.getInstance().exitDungeon();
+            MapStage.getInstance().exitDungeon(false);
             return "Got out";
         });
         registerCommand(new String[]{"debug", "collision"}, s -> {
@@ -272,7 +272,6 @@ public class ConsoleCommandInterpreter {
             for (EnemyData E : new Array.ArrayIterator<>(WorldData.getAllEnemies())) {
                 Deck D = E.generateDeck(Current.player().isFantasyMode(), Current.player().isUsingCustomDeck() || Current.player().getDifficulty().name.equalsIgnoreCase("Hard"));
                 DeckProxy DP = new DeckProxy(D, "Constructed", GameType.Constructed, null);
-                ColorSet colorSet = DP.getColor();
                 System.out.printf("Deck: %s\n%s\n\n", D.getName(), DP.getDeck().getMain().toCardList("\n")
                 );
             }
@@ -282,9 +281,8 @@ public class ConsoleCommandInterpreter {
             for (EnemyData E : new Array.ArrayIterator<>(WorldData.getAllEnemies())) {
                 Deck D = E.generateDeck(Current.player().isFantasyMode(), Current.player().isUsingCustomDeck() || Current.player().getDifficulty().name.equalsIgnoreCase("Hard"));
                 DeckProxy DP = new DeckProxy(D, "Constructed", GameType.Constructed, null);
-                ColorSet colorSet = DP.getColor();
-                System.out.printf("%s Colors: %s | Deck Colors: %s (%s)\n", E.name, E.colors, DP.getColorIdentity().toEnumSet().toString(), DP.getName()
-                );
+                System.out.printf("%s Colors: %s | Deck Colors: %s (%s)%s\n", E.name, E.colors, DP.getColorIdentity().toEnumSet().toString(), DP.getName()
+                , E.boss ? " - BOSS" : "");
             }
             return "Enemy color Identity dumped to stdout.";
         });

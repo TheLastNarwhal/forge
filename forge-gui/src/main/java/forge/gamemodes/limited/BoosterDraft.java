@@ -24,10 +24,11 @@ import forge.StaticData;
 import forge.card.CardEdition;
 import forge.deck.CardPool;
 import forge.deck.Deck;
+import forge.deck.DeckBase;
 import forge.gui.util.SGuiChoose;
 import forge.gui.util.SOptionPane;
 import forge.item.PaperCard;
-import forge.item.SealedProduct;
+import forge.item.SealedTemplate;
 import forge.item.generation.ChaosBoosterSupplier;
 import forge.item.generation.IUnOpenedProduct;
 import forge.item.generation.UnOpenedProduct;
@@ -84,7 +85,7 @@ public class BoosterDraft implements IBoosterDraft {
     protected boolean generateProduct() {
         switch (this.draftFormat) {
             case Full: // Draft from all cards in Forge
-                final Supplier<List<PaperCard>> s = new UnOpenedProduct(SealedProduct.Template.genericDraftBooster);
+                final Supplier<List<PaperCard>> s = new UnOpenedProduct(SealedTemplate.genericDraftBooster);
 
                 for (int i = 0; i < 3; i++) {
                     this.product.add(s);
@@ -172,12 +173,7 @@ public class BoosterDraft implements IBoosterDraft {
                 if (myDrafts.isEmpty()) {
                     SOptionPane.showMessageDialog(Localizer.getInstance().getMessage("lblNotFoundCustomDraftFiles"));
                 } else {
-                    Collections.sort(myDrafts, new Comparator<CustomLimited>() {
-                        @Override
-                        public int compare(CustomLimited o1, CustomLimited o2) {
-                            return o1.getName().compareTo(o2.getName());
-                        }
-                    });
+                    myDrafts.sort(Comparator.comparing(DeckBase::getName));
 
                     final CustomLimited customDraft = SGuiChoose.oneOrNone(Localizer.getInstance().getMessage("lblChooseCustomDraft"), myDrafts);
                     if (customDraft == null) {
@@ -307,7 +303,7 @@ public class BoosterDraft implements IBoosterDraft {
             throw new RuntimeException("BoosterGenerator : deck not found");
         }
 
-        final SealedProduct.Template tpl = draft.getSealedProductTemplate();
+        final SealedTemplate tpl = draft.getSealedProductTemplate();
 
         final UnOpenedProduct toAdd = new UnOpenedProduct(tpl, dPool);
         toAdd.setLimitedPool(draft.isSingleton());

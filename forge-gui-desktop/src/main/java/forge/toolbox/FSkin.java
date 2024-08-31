@@ -468,18 +468,25 @@ public class FSkin {
             x0 = tempCoords[0];
             y0 = tempCoords[1];
 
-            color = bimPreferredSprite.getData().getBounds().contains(x0, y0) ? getColorFromPixel(bimPreferredSprite.getRGB(x0, y0)) : new Color(0, 0, 0, 0);
+            try {
+                color = bimPreferredSprite.getData().getBounds().contains(x0, y0) ? getColorFromPixel(bimPreferredSprite.getRGB(x0, y0)) : new Color(0, 0, 0, 0);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
     public static void drawImage(final Graphics g, final SkinImage skinImage, final int x, final int y) {
-        skinImage.draw(g, x, y);
+        if (skinImage != null)
+            skinImage.draw(g, x, y);
     }
     public static void drawImage(final Graphics g, final SkinImage skinImage, final int x, final int y, final int w, final int h) {
-        skinImage.draw(g, x, y, w, h);
+        if (skinImage != null)
+            skinImage.draw(g, x, y, w, h);
     }
     public static void drawImage(final Graphics g, final SkinImage skinImage, final int dx1, final int dy1, final int dx2, final int dy2, final int sx1, final int sy1, final int sx2, final int sy2) {
-        skinImage.draw(g, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2);
+        if (skinImage != null)
+            skinImage.draw(g, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2);
     }
 
     /**
@@ -558,13 +565,18 @@ public class FSkin {
             newW = (tempCoords.length == 6 ? tempCoords[4] : 0);
             newH = (tempCoords.length == 6 ? tempCoords[5] : 0);
             final BufferedImage img = testPreferredSprite(s0);
-            final BufferedImage bi0 = img.getSubimage(x0, y0, w0, h0);
+            if (img == null)
+                return;
+            try {
+                final BufferedImage bi0 = img.getSubimage(x0, y0, w0, h0);
 
-            if (scale && newW != 0) {
-                setImage(s0, bi0.getScaledInstance(newW, newH, Image.SCALE_SMOOTH));
-            }
-            else {
-                setImage(s0, bi0);
+                if (scale && newW != 0) {
+                    setImage(s0, bi0.getScaledInstance(newW, newH, Image.SCALE_SMOOTH));
+                } else {
+                    setImage(s0, bi0);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
 
@@ -775,8 +787,13 @@ public class FSkin {
             h0 = tempCoords[3];
 
             final BufferedImage img = testPreferredSprite(s0);
-
-            setIcon(s0, new ImageIcon(img.getSubimage(x0, y0, w0, h0)));
+            if (img == null)
+                return;
+            try {
+                setIcon(s0, new ImageIcon(img.getSubimage(x0, y0, w0, h0)));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         /**
@@ -923,11 +940,7 @@ public class FSkin {
 
     /** @return {@link java.awt.font} */
     private static Font getFixedFont(final int size) {
-        Font fixedFont = fixedFonts.get(size);
-        if (fixedFont == null) {
-            fixedFont = new Font("Monospaced", Font.PLAIN, size);
-            fixedFonts.put(size, fixedFont);
-        }
+        Font fixedFont = fixedFonts.computeIfAbsent(size, s -> new Font("Monospaced", Font.PLAIN, s));
         return fixedFont;
     }
 
@@ -1055,7 +1068,11 @@ public class FSkin {
         }
 
         private void updateFont() {
-            this.font = baseFont.deriveFont(this.style, this.size);
+            try {
+                this.font = baseFont.deriveFont(this.style, this.size);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -1099,7 +1116,7 @@ public class FSkin {
     private static String preferredName;
     private static BufferedImage bimDefaultSprite, bimFavIcon, bimPreferredSprite, bimFoils, bimQuestDraftDeck, bimOldFoils,
     bimDefaultAvatars, bimPreferredAvatars, bimTrophies, bimAbilities, bimManaIcons, bimPhyrexian, bimColorlessHybrid, bimDefaultSleeve,
-            bimDefaultSleeve2, bimDefaultDeckbox, bimPrefferedSetLogo, bimDefaultWatermark, bimDefaultDraftRank;
+            bimDefaultSleeve2, bimDefaultDeckbox, bimPrefferedSetLogo, bimDefaultWatermark, bimDefaultDraftRank, bimAttractionLights;
     private static int x0, y0, w0, h0, newW, newH, preferredW, preferredH;
     private static int defaultFontSize = 12;
     private static boolean loaded = false;
@@ -1154,7 +1171,7 @@ public class FSkin {
 
         // Non-default (preferred) skin name and dir.
         preferredName = skinName.toLowerCase().replace(' ', '_');
-        preferredDir = preferredName.equals("default") ? ForgeConstants.DEFAULT_SKINS_DIR : ForgeConstants.CACHE_SKINS_DIR + preferredName + "/";
+        preferredDir = preferredName.equalsIgnoreCase("default") || preferredName.isEmpty() ? ForgeConstants.DEFAULT_SKINS_DIR : ForgeConstants.CACHE_SKINS_DIR + preferredName + "/";
 
         if (onInit) {
             final File f = new File(preferredDir + ForgeConstants.SPLASH_BG_FILE);
@@ -1218,7 +1235,7 @@ public class FSkin {
         }
 
         final Localizer localizer = Localizer.getInstance();
-        FView.SINGLETON_INSTANCE.setSplashProgessBarMessage(localizer.getMessage("splash.loading.processingimagesprites") + ": ", 12);
+        FView.SINGLETON_INSTANCE.setSplashProgessBarMessage(localizer.getMessage("splash.loading.processingimagesprites") + ": ", 20);
 
         // Grab and test various sprite files.
         final String defaultDir = ForgeConstants.DEFAULT_SKINS_DIR;
@@ -1242,6 +1259,7 @@ public class FSkin {
         final File f18 = new File(defaultDir + ForgeConstants.SPRITE_PHYREXIAN_FILE);
         final File f19 = new File(defaultDir + ForgeConstants.SPRITE_COLORLESS_HYBRID_FILE);
         final File f20 = new File(defaultDir + ForgeConstants.SPRITE_DRAFTRANKS_FILE);
+        final File f21 = new File(defaultDir + ForgeConstants.SPRITE_ATTRACTION_LIGHTS_FILE);
 
         try {
             int p = 0;
@@ -1254,6 +1272,8 @@ public class FSkin {
             bimPhyrexian = ImageIO.read(f18);
             FView.SINGLETON_INSTANCE.incrementSplashProgessBar(++p);
             bimColorlessHybrid = ImageIO.read(f19);
+            FView.SINGLETON_INSTANCE.incrementSplashProgessBar(++p);
+            bimAttractionLights = ImageIO.read(f21);
             FView.SINGLETON_INSTANCE.incrementSplashProgessBar(++p);
             bimPreferredSprite = ImageIO.read(f2);
             FView.SINGLETON_INSTANCE.incrementSplashProgessBar(++p);
@@ -1342,6 +1362,9 @@ public class FSkin {
                 case COLORLESS_HYBRID:
                     setImage(prop, bimColorlessHybrid);
                     break;
+                case ATTRACTION_LIGHTS:
+                    setImage(prop, bimAttractionLights);
+                    break;
                 case DECKBOX:
                     setImage(prop, bimDefaultDeckbox);
                     break;
@@ -1386,6 +1409,7 @@ public class FSkin {
         bimPhyrexian.flush();
         bimColorlessHybrid.flush();
         bimManaIcons.flush();
+        bimAttractionLights.flush();
 
         if (bimPreferredAvatars != null) { bimPreferredAvatars.flush(); }
 
@@ -1407,6 +1431,7 @@ public class FSkin {
         bimPhyrexian = null;
         bimColorlessHybrid = null;
         bimManaIcons = null;
+        bimAttractionLights = null;
 
         //establish encoding symbols
         final File dir = new File(ForgeConstants.CACHE_SYMBOLS_DIR);
@@ -1496,8 +1521,12 @@ public class FSkin {
         h0 = tempCoords[3];
 
         if (s0.equals(FSkinProp.IMG_QUEST_DRAFT_DECK)) {
-            final Color c = getColorFromPixel(bimQuestDraftDeck.getRGB((x0 + w0 / 2), (y0 + h0 / 2)));
-            if (c.getAlpha() != 0) { return bimQuestDraftDeck; }
+            if (bimQuestDraftDeck != null) {
+                final Color c = getColorFromPixel(bimQuestDraftDeck.getRGB((x0 + w0 / 2), (y0 + h0 / 2)));
+                if (c.getAlpha() != 0) { return bimQuestDraftDeck; }
+            } else {
+                return null;
+            }
         }
 
         // Test if requested sub-image in inside bounds of preferred sprite.
@@ -1512,28 +1541,30 @@ public class FSkin {
         int x, y;
         Color c;
 
-        // Center
-        x = (x0 + w0 / 2);
-        y = (y0 + h0 / 2);
-        c = getColorFromPixel(bimPreferredSprite.getRGB(x, y));
-        if (c.getAlpha() != 0) { return bimPreferredSprite; }
+        if (bimPreferredSprite != null) {
+            // Center
+            x = (x0 + w0 / 2);
+            y = (y0 + h0 / 2);
+            c = getColorFromPixel(bimPreferredSprite.getRGB(x, y));
+            if (c.getAlpha() != 0) { return bimPreferredSprite; }
 
-        x += 2;
-        y += 2;
-        c = getColorFromPixel(bimPreferredSprite.getRGB(x, y));
-        if (c.getAlpha() != 0) { return bimPreferredSprite; }
+            x += 2;
+            y += 2;
+            c = getColorFromPixel(bimPreferredSprite.getRGB(x, y));
+            if (c.getAlpha() != 0) { return bimPreferredSprite; }
 
-        x -= 4;
-        c = getColorFromPixel(bimPreferredSprite.getRGB(x, y));
-        if (c.getAlpha() != 0) { return bimPreferredSprite; }
+            x -= 4;
+            c = getColorFromPixel(bimPreferredSprite.getRGB(x, y));
+            if (c.getAlpha() != 0) { return bimPreferredSprite; }
 
-        y -= 4;
-        c = getColorFromPixel(bimPreferredSprite.getRGB(x, y));
-        if (c.getAlpha() != 0) { return bimPreferredSprite; }
+            y -= 4;
+            c = getColorFromPixel(bimPreferredSprite.getRGB(x, y));
+            if (c.getAlpha() != 0) { return bimPreferredSprite; }
 
-        x += 4;
-        c = getColorFromPixel(bimPreferredSprite.getRGB(x, y));
-        if (c.getAlpha() != 0) { return bimPreferredSprite; }
+            x += 4;
+            c = getColorFromPixel(bimPreferredSprite.getRGB(x, y));
+            if (c.getAlpha() != 0) { return bimPreferredSprite; }
+        }
 
         return bimDefaultSprite;
     }
@@ -1569,7 +1600,11 @@ public class FSkin {
                     if (pxTest.getAlpha() == 0) {
                         continue;
                     }
-                    avatars.put(counter++, new SkinImage(bimDefaultAvatars.getSubimage(i, j, 100, 100)));
+                    try {
+                        avatars.put(counter++, new SkinImage(bimDefaultAvatars.getSubimage(i, j, 100, 100)));
+                    } catch (Exception e) {
+                        System.err.println(e.getMessage());
+                    }
                 }
             }
         }
@@ -1580,25 +1615,31 @@ public class FSkin {
         int counter = 0;
         Color pxTest;
 
-        final int pw = bimDefaultSleeve.getWidth();
-        final int ph = bimDefaultSleeve.getHeight();
+        if (bimDefaultSleeve != null) {
+            final int pw = bimDefaultSleeve.getWidth();
+            final int ph = bimDefaultSleeve.getHeight();
 
-        for (int j = 0; j < ph; j += 500) {
-            for (int i = 0; i < pw; i += 360) {
-                pxTest = getColorFromPixel(bimDefaultSleeve.getRGB(i + 180, j + 250));
-                if (pxTest.getAlpha() == 0) { continue; }
-                sleeves.put(counter++, new SkinImage(bimDefaultSleeve.getSubimage(i, j, 360, 500)));
+            for (int j = 0; j < ph; j += 500) {
+                for (int i = 0; i < pw; i += 360) {
+                    pxTest = getColorFromPixel(bimDefaultSleeve.getRGB(i + 180, j + 250));
+                    if (pxTest.getAlpha() == 0) {
+                        continue;
+                    }
+                    sleeves.put(counter++, new SkinImage(bimDefaultSleeve.getSubimage(i, j, 360, 500)));
+                }
             }
         }
-        //2nd set
-        final int aw = bimDefaultSleeve2.getWidth();
-        final int ah = bimDefaultSleeve2.getHeight();
+        if (bimDefaultSleeve2 != null) {
+            //2nd set
+            final int aw = bimDefaultSleeve2.getWidth();
+            final int ah = bimDefaultSleeve2.getHeight();
 
-        for (int j = 0; j < ah; j += 500) {
-            for (int i = 0; i < aw; i += 360) {
-                pxTest = getColorFromPixel(bimDefaultSleeve2.getRGB(i + 180, j + 250));
-                if (pxTest.getAlpha() == 0) { continue; }
-                sleeves.put(counter++, new SkinImage(bimDefaultSleeve2.getSubimage(i, j, 360, 500)));
+            for (int j = 0; j < ah; j += 500) {
+                for (int i = 0; i < aw; i += 360) {
+                    pxTest = getColorFromPixel(bimDefaultSleeve2.getRGB(i + 180, j + 250));
+                    if (pxTest.getAlpha() == 0) { continue; }
+                    sleeves.put(counter++, new SkinImage(bimDefaultSleeve2.getSubimage(i, j, 360, 500)));
+                }
             }
         }
     }

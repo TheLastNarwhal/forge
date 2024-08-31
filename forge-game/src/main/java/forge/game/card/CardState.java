@@ -18,7 +18,6 @@
 package forge.game.card;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,17 +47,20 @@ import forge.game.spellability.SpellAbility;
 import forge.game.spellability.SpellAbilityPredicates;
 import forge.game.staticability.StaticAbility;
 import forge.game.trigger.Trigger;
+import forge.util.ITranslatable;
 import forge.util.collect.FCollection;
 import forge.util.collect.FCollectionView;
 import io.sentry.Breadcrumb;
 import io.sentry.Sentry;
+import org.apache.commons.lang3.StringUtils;
 
-public class CardState extends GameObject implements IHasSVars {
+public class CardState extends GameObject implements IHasSVars, ITranslatable {
     private String name = "";
     private CardType type = new CardType(false);
     private ManaCost manaCost = ManaCost.NO_COST;
     private byte color = MagicColor.COLORLESS;
     private String oracleText = "";
+    private String functionalVariantName = null;
     private int basePower = 0;
     private int baseToughness = 0;
     private String basePowerString = null;
@@ -203,6 +205,16 @@ public class CardState extends GameObject implements IHasSVars {
         view.setOracleText(oracleText);
     }
 
+    public String getFunctionalVariantName() {
+        return functionalVariantName;
+    }
+    public void setFunctionalVariantName(String functionalVariantName) {
+        if(functionalVariantName != null && functionalVariantName.isEmpty())
+            functionalVariantName = null;
+        this.functionalVariantName = functionalVariantName;
+        view.setFunctionalVariantName(functionalVariantName);
+    }
+
 
     public final int getBasePower() {
         return basePower;
@@ -304,7 +316,7 @@ public class CardState extends GameObject implements IHasSVars {
             Breadcrumb bread = new Breadcrumb(msg);
             bread.setData("Card", card.getName());
             bread.setData("Keyword", s);
-            Sentry.addBreadcrumb(bread, this);
+            Sentry.addBreadcrumb(bread);
 
             //rethrow
             throw new RuntimeException("Error in Keyword " + s + " for card " + card.getName(), e);
@@ -606,6 +618,7 @@ public class CardState extends GameObject implements IHasSVars {
         setManaCost(source.getManaCost());
         setColor(source.getColor());
         setOracleText(source.getOracleText());
+        setFunctionalVariantName(source.getFunctionalVariantName());
         setBasePower(source.getBasePower());
         setBaseToughness(source.getBaseToughness());
         setBaseLoyalty(source.getBaseLoyalty());
@@ -748,15 +761,27 @@ public class CardState extends GameObject implements IHasSVars {
         }
     }
 
+    public ImmutableList<CardTraitBase> getTraits() {
+        return ImmutableList.<CardTraitBase>builder()
+                .addAll(manaAbilities)
+                .addAll(nonManaAbilities)
+                .addAll(triggers)
+                .addAll(replacementEffects)
+                .addAll(staticAbilities)
+                .build();
+    }
+
+    public void resetOriginalHost(Card oldHost) {
+        for (final CardTraitBase ctb : getTraits()) {
+            if (ctb.isIntrinsic() && ctb.getOriginalHost() != null && ctb.getOriginalHost().equals(oldHost)) {
+                // only update traits with undesired host or SVar lookup would fail
+                ctb.setCardState(this);
+            }
+        }
+    }
+
     public void updateChangedText() {
-        final List<CardTraitBase> allAbs = ImmutableList.<CardTraitBase>builder()
-            .addAll(manaAbilities)
-            .addAll(nonManaAbilities)
-            .addAll(triggers)
-            .addAll(replacementEffects)
-            .addAll(staticAbilities)
-            .build();
-        for (final CardTraitBase ctb : allAbs) {
+        for (final CardTraitBase ctb : getTraits()) {
             if (ctb.isIntrinsic()) {
                 ctb.changeText();
             }
@@ -764,14 +789,7 @@ public class CardState extends GameObject implements IHasSVars {
     }
 
     public void changeTextIntrinsic(Map<String,String> colorMap, Map<String,String> typeMap) {
-        final List<CardTraitBase> allAbs = ImmutableList.<CardTraitBase>builder()
-            .addAll(manaAbilities)
-            .addAll(nonManaAbilities)
-            .addAll(triggers)
-            .addAll(replacementEffects)
-            .addAll(staticAbilities)
-            .build();
-        for (final CardTraitBase ctb : allAbs) {
+        for (final CardTraitBase ctb : getTraits()) {
             if (ctb.isIntrinsic()) {
                 ctb.changeTextIntrinsic(colorMap, typeMap);
             }
@@ -799,5 +817,22 @@ public class CardState extends GameObject implements IHasSVars {
             cloakUp = CardFactoryUtil.abilityTurnFaceUp(this, "CloakUp", "Uncloak");
         }
         return cloakUp;
+    }
+
+    @Override
+    public String getTranslationKey() {
+        if(StringUtils.isNotEmpty(functionalVariantName))
+            return name + " $" + functionalVariantName;
+        return name;
+    }
+
+    @Override
+    public String getUntranslatedType() {
+        return getType().toString();
+    }
+
+    @Override
+    public String getUntranslatedOracle() {
+        return getOracleText();
     }
 }

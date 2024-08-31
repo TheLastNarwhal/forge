@@ -24,7 +24,7 @@ import forge.game.card.CardPredicates;
 import forge.game.phase.PhaseType;
 import forge.game.player.Player;
 import forge.game.spellability.AbilitySub;
-import forge.game.spellability.LandAbility;
+
 import forge.game.spellability.SpellAbility;
 import forge.game.spellability.SpellAbilityCondition;
 import forge.game.zone.ZoneType;
@@ -136,7 +136,7 @@ public class SpellAbilityPicker {
 
     private static boolean isSorcerySpeed(SpellAbility sa, Player player) {
         // TODO: Can we use the actual rules engine for this instead of trying to do the logic ourselves?
-        if (sa instanceof LandAbility) {
+        if (sa.isLandAbility()) {
             return true;
         }
         if (sa.isSpell()) {
@@ -327,15 +327,15 @@ public class SpellAbilityPicker {
     }
 
     private AiPlayDecision canPlayAndPayForSim(final SpellAbility sa) {
-        if (!sa.isLegalAfterStack()) {
-            return AiPlayDecision.CantPlaySa;
-        }
         if (!sa.checkRestrictions(sa.getHostCard(), player)) {
             return AiPlayDecision.CantPlaySa;
         }
 
-        if (sa instanceof LandAbility) {
+        if (sa.isLandAbility()) {
             return AiPlayDecision.WillPlay;
+        }
+        if (!sa.isLegalAfterStack()) {
+            return AiPlayDecision.CantPlaySa;
         }
         if (!sa.canPlay()) {
             return AiPlayDecision.CantPlaySa;
@@ -394,7 +394,7 @@ public class SpellAbilityPicker {
 
     public List<AbilitySub> chooseModeForAbility(SpellAbility sa, List<AbilitySub> choices, int min, int num, boolean allowRepeat) {
         if (interceptor != null) {
-            return interceptor.chooseModesForAbility(choices, min, num, allowRepeat);
+            return interceptor.chooseModesForAbility(sa, choices, min, num, allowRepeat);
         }
         if (plan != null && plan.getSelectedDecision() != null && plan.getSelectedDecision().modes != null) {
             Plan.Decision decision = plan.getSelectedDecision();

@@ -18,6 +18,7 @@
 package forge.card;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import forge.Forge;
@@ -129,6 +130,18 @@ public class CardFaceSymbols {
         Forge.getAssets().manaImages().put("protectU", FSkinImage.IMG_ABILITY_PROTECT_U);
         Forge.getAssets().manaImages().put("protectUW", FSkinImage.IMG_ABILITY_PROTECT_UW);
         Forge.getAssets().manaImages().put("protectW", FSkinImage.IMG_ABILITY_PROTECT_W);
+
+        // symbol lookup for text render
+        for (Map.Entry<String, FSkinProp> e : FSkinProp.MANA_IMG.entrySet()) {
+            Forge.getAssets().symbolLookup().put(e.getKey(), Forge.getAssets().images().get(e.getValue()));
+        }
+
+        Forge.getAssets().symbolLookup().put("E", FSkinImage.ENERGY);
+        Forge.getAssets().symbolLookup().put("TK", FSkinImage.TICKET);
+        Forge.getAssets().symbolLookup().put("AE", FSkinImage.AETHER_SHARD);
+        Forge.getAssets().symbolLookup().put("PW", FSkinImage.PW_BADGE_COMMON);
+        Forge.getAssets().symbolLookup().put("CR", FSkinImage.QUEST_COINSTACK);
+        Forge.getAssets().symbolLookup().put("M", FSkinImage.MANASHARD);
     }
 
     public static void drawManaCost(Graphics g, ManaCost manaCost, float x, float y, final float imageSize) {
@@ -179,6 +192,16 @@ public class CardFaceSymbols {
                 x += dx;
             else
                 y += dx;
+        }
+    }
+
+    public static void drawAttractionLights(Graphics g, Set<Integer> lights, float x, float y, final float imageSize, boolean vertical) {
+        for(int i = 1; i <= 6; i++) {
+            drawSymbol("AL" + i + (lights.contains(i) ? "ON" : "OFF"), g, x, y, imageSize, imageSize);
+            if (!vertical)
+                x += imageSize;
+            else
+                y += imageSize;
         }
     }
 

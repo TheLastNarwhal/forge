@@ -33,7 +33,7 @@ import forge.game.mana.ManaRefundService;
 import forge.game.player.Player;
 import forge.game.player.PlayerController;
 import forge.game.player.PlayerView;
-import forge.game.spellability.LandAbility;
+
 import forge.game.spellability.OptionalCostValue;
 import forge.game.spellability.SpellAbility;
 import forge.game.staticability.StaticAbilityManaConvert;
@@ -70,7 +70,7 @@ public class HumanPlay {
         Card source = sa.getHostCard();
         sa.setActivatingPlayer(p);
 
-        if (sa instanceof LandAbility) {
+        if (sa.isLandAbility()) {
             if (sa.canPlay()) {
                 sa.resolve();
             }
@@ -534,7 +534,7 @@ public class HumanPlay {
             final Card offering = ability.getSacrificedAsOffering();
             offering.setUsedToPay(false);
             if (!manaInputCancelled) {
-                game.getAction().sacrifice(offering, ability, false, params);
+                game.getAction().sacrifice(new CardCollection(offering), ability, false, params);
             }
             ability.resetSacrificedAsOffering();
         }
@@ -542,7 +542,7 @@ public class HumanPlay {
             final Card emerge = ability.getSacrificedAsEmerge();
             emerge.setUsedToPay(false);
             if (!manaInputCancelled) {
-                game.getAction().sacrifice(emerge, ability, false, params);
+                game.getAction().sacrifice(new CardCollection(emerge), ability, false, params);
                 ability.setSacrificedAsEmerge(game.getChangeZoneLKIInfo(emerge));
             } else {
                 ability.resetSacrificedAsEmerge();
@@ -570,14 +570,6 @@ public class HumanPlay {
         }
         else if (ability.getXManaCostPaid() != null) { //ensure pre-announced X value retained
             toPay.setXManaCostPaid(ability.getXManaCostPaid(), xColor);
-        }
-
-        int timesMultikicked = source.getKickerMagnitude();
-        if (timesMultikicked > 0 && ability.isAnnouncing("Multikicker")) {
-            ManaCost mkCost = ability.getMultiKickerManaCost();
-            for (int i = 0; i < timesMultikicked; i++) {
-                toPay.addManaCost(mkCost);
-            }
         }
 
         CardCollection cardsToDelve = new CardCollection();

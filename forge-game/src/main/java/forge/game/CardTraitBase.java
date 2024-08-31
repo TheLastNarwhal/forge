@@ -27,6 +27,7 @@ import forge.game.spellability.SpellAbility;
 import forge.game.trigger.Trigger;
 import forge.game.zone.ZoneType;
 import forge.util.Expressions;
+import forge.util.ITranslatable;
 
 /**
  * Base class for Triggers,ReplacementEffects and StaticAbilities.
@@ -64,7 +65,7 @@ public abstract class CardTraitBase extends GameObject implements IHasCardView, 
      * Keys that should not changed
      */
     private static final ImmutableList<String> noChangeKeys = ImmutableList.<String>builder()
-            .add("TokenScript", "TokenImage", "NewName", "ChooseFromList")
+            .add("TokenScript", "TokenImage", "NewName" , "DefinedName", "ChooseFromList")
             .add("AddAbility").build();
 
     /**
@@ -170,7 +171,7 @@ public abstract class CardTraitBase extends GameObject implements IHasCardView, 
      *
      * @return a boolean.
      */
-    public final boolean isSecondary() {
+    public boolean isSecondary() {
         return getParamOrDefault("Secondary", "False").equals("True");
     }
 
@@ -623,6 +624,14 @@ public abstract class CardTraitBase extends GameObject implements IHasCardView, 
         return getCardState().getView().getState();
     }
 
+    public ITranslatable getHostName(CardTraitBase node) {
+        // if alternate state is viewed while card uses original
+        if (node.isIntrinsic() && node.cardState != null && !node.cardState.getStateName().equals(getHostCard().getCurrentStateName())) {
+            return node.cardState;
+        }
+        return node.getHostCard();
+    }
+
     public Card getOriginalHost() {
         if (getCardState() != null)
             return getCardState().getCard();
@@ -655,7 +664,7 @@ public abstract class CardTraitBase extends GameObject implements IHasCardView, 
         Map<String, String> result = Maps.newHashMap(output);
         for (Map.Entry<String, String> e : input.entrySet()) {
             String value = e.getValue();
-            result.put(e.getKey(), output.containsKey(value) ? output.get(value) : value);
+            result.put(e.getKey(), output.getOrDefault(value, value));
         }
         return result;
     }

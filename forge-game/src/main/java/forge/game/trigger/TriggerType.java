@@ -1,10 +1,10 @@
 package forge.game.trigger;
 
+import forge.game.card.Card;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
-
-import forge.game.card.Card;
 
 
 /**
@@ -83,15 +83,19 @@ public enum TriggerType {
     Fight(TriggerFight.class),
     FightOnce(TriggerFightOnce.class),
     FlippedCoin(TriggerFlippedCoin.class),
+    Forage(TriggerForage.class),
     Foretell(TriggerForetell.class),
+    GiveGift(TriggerGiveGift.class),
     Immediate(TriggerImmediate.class),
     Investigated(TriggerInvestigated.class),
     LandPlayed(TriggerLandPlayed.class),
+    LifeChanged(TriggerLifeChanged.class),
     LifeGained(TriggerLifeGained.class),
     LifeLost(TriggerLifeLost.class),
     LifeLostAll(TriggerLifeLostAll.class),
     LosesGame(TriggerLosesGame.class),
     ManaAdded(TriggerManaAdded.class),
+    ManaExpend(TriggerManaExpend.class),
     Mentored(TriggerMentored.class),
     Milled(TriggerMilled.class),
     MilledOnce(TriggerMilledOnce.class),
@@ -114,6 +118,7 @@ public enum TriggerType {
     RolledDieOnce(TriggerRolledDieOnce.class),
     RoomEntered(TriggerEnteredRoom.class),
     Sacrificed(TriggerSacrificed.class),
+    SacrificedOnce(TriggerSacrificedOnce.class),
     Scry(TriggerScry.class),
     SearchedLibrary(TriggerSearchedLibrary.class),
     SeekAll(TriggerSeekAll.class),

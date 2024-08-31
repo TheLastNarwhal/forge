@@ -3,7 +3,6 @@ package forge.ai.ability;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
 import forge.ai.AiController;
@@ -82,7 +81,7 @@ public class TokenAi extends SpellAbilityAi {
 
         Card actualToken = spawnToken(ai, sa);
 
-        if (actualToken == null || actualToken.getNetToughness() < 1) {
+        if (actualToken == null || (actualToken.isCreature() && actualToken.getNetToughness() < 1)) {
             final AbilitySub sub = sa.getSubAbility();
             // useful
             // no token created
@@ -182,12 +181,7 @@ public class TokenAi extends SpellAbilityAi {
                 } else {
                     // Flash Foliage
                     CardCollection list = CardLists.getTargetableCards(ai.getOpponents().getCardsIn(ZoneType.Battlefield), sa);
-                    CardCollection betterList = CardLists.filter(list, new Predicate<Card>() {
-                        @Override
-                        public boolean apply(Card c) {
-                            return c.getLethalDamage() == 1;
-                        }
-                    });
+                    CardCollection betterList = CardLists.filter(list, c -> c.getLethalDamage() == 1);
                     if (!betterList.isEmpty()) {
                         list = betterList;
                     }

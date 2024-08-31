@@ -1,6 +1,6 @@
 package forge.ai.simulation;
 
-import forge.game.spellability.LandAbility;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -158,9 +158,9 @@ public class GameSimulator {
     }
     public Score simulateSpellAbility(SpellAbility origSa, GameStateEvaluator eval, boolean resolve) {
         SpellAbility sa;
-        if (origSa instanceof LandAbility) {
+        if (origSa.isLandAbility()) {
             Card hostCard = (Card) copier.find(origSa.getHostCard());
-            if (!aiPlayer.playLand(hostCard, false)) {
+            if (!aiPlayer.playLand(hostCard, false, origSa)) {
                 System.err.println("Simulation: Couldn't play land! " + origSa);
             }
             sa = origSa;
@@ -252,32 +252,29 @@ public class GameSimulator {
         // TODO: This needs to set an AI controller for all opponents, in case of multiplayer.
         PlayerControllerAi sim = new PlayerControllerAi(game, opponent, opponent.getLobbyPlayer());
         sim.setUseSimulation(true);
-        opponent.runWithController(new Runnable() {
-            @Override
-            public void run() {
-                final Set<Card> allAffectedCards = new HashSet<>();
+        opponent.runWithController(() -> {
+            final Set<Card> allAffectedCards = new HashSet<>();
+            game.getAction().checkStateEffects(false, allAffectedCards);
+            game.getStack().addAllTriggeredAbilitiesToStack();
+            while (!game.getStack().isEmpty() && !game.isGameOver()) {
+                debugPrint("Resolving:" + game.getStack().peekAbility());
+
+                // Resolve the top effect on the stack.
+                game.getStack().resolveStack();
+
+                // Evaluate state based effects as a result of resolving stack.
+                // Note: Needs to happen after resolve stack rather than at the
+                // top of the loop to ensure state effects are evaluated after the
+                // last resolved effect
                 game.getAction().checkStateEffects(false, allAffectedCards);
+
+                // Add any triggers additional triggers as a result of the above.
+                // Must be below state effects, since legendary rule is evaluated
+                // as part of state effects and trigger come afterward. (e.g. to
+                // correctly handle two Dark Depths - one having no counters).
                 game.getStack().addAllTriggeredAbilitiesToStack();
-                while (!game.getStack().isEmpty() && !game.isGameOver()) {
-                    debugPrint("Resolving:" + game.getStack().peekAbility());
 
-                    // Resolve the top effect on the stack.
-                    game.getStack().resolveStack();
- 
-                    // Evaluate state based effects as a result of resolving stack.
-                    // Note: Needs to happen after resolve stack rather than at the
-                    // top of the loop to ensure state effects are evaluated after the
-                    // last resolved effect
-                    game.getAction().checkStateEffects(false, allAffectedCards);
-
-                    // Add any triggers additional triggers as a result of the above.
-                    // Must be below state effects, since legendary rule is evaluated
-                    // as part of state effects and trigger come afterward. (e.g. to
-                    // correctly handle two Dark Depths - one having no counters).
-                    game.getStack().addAllTriggeredAbilitiesToStack();
-
-                    // Continue until stack is empty.
-                }
+                // Continue until stack is empty.
             }
         }, sim);
     }

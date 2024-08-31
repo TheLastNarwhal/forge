@@ -1,6 +1,5 @@
 package forge.ai.ability;
 
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -96,8 +95,8 @@ public class DamageDealAi extends DamageAiBase {
         final String damage = sa.getParam("NumDmg");
         int dmg = AbilityUtils.calculateAmount(source, damage, sa);
 
-        if (damage.equals("X") || sourceName.equals("Crater's Claws")) {
-            if (sa.getSVar(damage).equals("Count$xPaid") || sourceName.equals("Crater's Claws")) {
+        if (damage.equals("X") || source.getSVar("X").equals("Count$xPaid") || sourceName.equals("Crater's Claws")) {
+            if (sa.getSVar("X").equals("Count$xPaid") || sa.getSVar(damage).equals("Count$xPaid") || sourceName.equals("Crater's Claws")) {
                 dmg = ComputerUtilCost.getMaxXValue(sa, ai, sa.isTrigger());
 
                 // Try not to waste spells like Blaze or Fireball on early targets, try to do more damage with them if possible
@@ -171,7 +170,7 @@ public class DamageDealAi extends DamageAiBase {
         } else if ("WildHunt".equals(logic)) {
             // This dummy ability will just deal 0 damage, but holds the logic for the AI for Master of Wild Hunt
             List<Card> wolves = CardLists.getValidCards(ai.getCardsIn(ZoneType.Battlefield), "Creature.Wolf+untapped+YouCtrl+Other", ai, source, sa);
-            dmg = Aggregates.sum(wolves, CardPredicates.Accessors.fnGetNetPower);
+            dmg = Aggregates.sum(wolves, Card::getNetPower);
         } else if ("Triskelion".equals(logic)) {
             final int n = source.getCounters(CounterEnumType.P1P1);
             if (n > 0) {
@@ -337,16 +336,11 @@ public class DamageDealAi extends DamageAiBase {
         // Filter MustTarget requirements
         StaticAbilityMustTarget.filterMustTargetCards(ai, hPlay, sa);
 
-        CardCollection killables = CardLists.filter(hPlay, new Predicate<Card>() {
-            @Override
-            public boolean apply(final Card c) {
-                return c.getSVar("Targeting").equals("Dies")
-                        || (ComputerUtilCombat.getEnoughDamageToKill(c, d, source, false, noPrevention) <= d)
-                            && !ComputerUtil.canRegenerate(ai, c)
-                            && !c.hasSVar("SacMe")
-                            && !ComputerUtilCard.hasActiveUndyingOrPersist(c);
-            }
-        });
+        CardCollection killables = CardLists.filter(hPlay, c -> c.getSVar("Targeting").equals("Dies")
+                || (ComputerUtilCombat.getEnoughDamageToKill(c, d, source, false, noPrevention) <= d)
+                    && !ComputerUtil.canRegenerate(ai, c)
+                    && !c.hasSVar("SacMe")
+                    && !ComputerUtilCard.hasActiveUndyingOrPersist(c));
 
         // Filter AI-specific targets if provided
         killables = ComputerUtil.filterAITgts(sa, ai, killables, true);
@@ -416,15 +410,10 @@ public class DamageDealAi extends DamageAiBase {
         final Game game = source.getGame();
         List<Card> hPlay = CardLists.filter(getTargetableCards(ai, sa, pl, tgt, activator, source, game), CardPredicates.Presets.PLANESWALKERS);
 
-        CardCollection killables = CardLists.filter(hPlay, new Predicate<Card>() {
-            @Override
-            public boolean apply(final Card c) {
-                return c.getSVar("Targeting").equals("Dies")
-                        || (ComputerUtilCombat.getEnoughDamageToKill(c, d, source, false, noPrevention) <= d)
-                        && !ComputerUtil.canRegenerate(ai, c)
-                        && !c.hasSVar("SacMe");
-            }
-        });
+        CardCollection killables = CardLists.filter(hPlay, c -> c.getSVar("Targeting").equals("Dies")
+                || (ComputerUtilCombat.getEnoughDamageToKill(c, d, source, false, noPrevention) <= d)
+                && !ComputerUtil.canRegenerate(ai, c)
+                && !c.hasSVar("SacMe"));
 
         // Filter AI-specific targets if provided
         killables = ComputerUtil.filterAITgts(sa, ai, killables, true);
@@ -734,6 +723,7 @@ public class DamageDealAi extends DamageAiBase {
             if (sa.canTarget(enemy) && sa.canAddMoreTarget()) {
                 if ((phase.is(PhaseType.END_OF_TURN) && phase.getNextTurn().equals(ai))
                         || (isSorcerySpeed(sa, ai) && phase.is(PhaseType.MAIN2))
+                        || ("BurnCreatures".equals(logic) && !enemy.getCreaturesInPlay().isEmpty())
                         || immediately) {
                     boolean pingAfterAttack = "PingAfterAttack".equals(logic) && phase.getPhase().isAfter(PhaseType.COMBAT_DECLARE_ATTACKERS) && phase.isPlayerTurn(ai);
                     boolean isPWAbility = sa.isPwAbility() && sa.getPayCosts().hasSpecificCostType(CostPutCounter.class);

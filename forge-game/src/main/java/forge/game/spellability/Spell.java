@@ -153,6 +153,7 @@ public abstract class Spell extends SpellAbility implements java.io.Serializable
         this.castFaceDown = faceDown;
     }
 
+    @Override
     public Card getAlternateHost(Card source) {
         boolean lkicheck = false;
 
@@ -203,7 +204,7 @@ public abstract class Spell extends SpellAbility implements java.io.Serializable
             if (!source.isLKI()) {
                 source = CardCopyService.getLKICopy(source);
             }
-            Long next = source.getGame().getNextTimestamp();
+            long next = source.getGame().getNextTimestamp();
             source.addCloneState(CardFactory.getCloneStates(source, source, this), next);
             lkicheck = true;
         }

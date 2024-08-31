@@ -1,6 +1,5 @@
 package forge.game.card;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import forge.ImageKeys;
@@ -217,6 +216,14 @@ public class CardView extends GameEntityView {
         set(TrackableProperty.Tapped, c.isTapped());
     }
 
+    public GamePieceType getGamePieceType() {
+        return get(TrackableProperty.GamePieceType);
+    }
+    void updateGamePieceType(Card c) {
+        set(TrackableProperty.GamePieceType, c.getGamePieceType());
+    }
+
+    //Tracked separately from GamePieceType; a token card or a merged permanent with a token as the top is also considered a "token"
     public boolean isToken() {
         return get(TrackableProperty.Token);
     }
@@ -225,10 +232,7 @@ public class CardView extends GameEntityView {
     }
 
     public boolean isImmutable() {
-        return get(TrackableProperty.IsImmutable);
-    }
-    public void updateImmutable(Card c) {
-        set(TrackableProperty.IsImmutable, c.isImmutable());
+        return get(TrackableProperty.GamePieceType) == GamePieceType.EFFECT;
     }
 
     public boolean isEmblem() {
@@ -431,6 +435,12 @@ public class CardView extends GameEntityView {
     void updateChosenPlayer(Card c) {
         set(TrackableProperty.ChosenPlayer, PlayerView.get(c.getChosenPlayer()));
     }
+    public PlayerView getPromisedGift() {
+        return get(TrackableProperty.PromisedGift);
+    }
+    void updatePromisedGift(Card c) {
+        set(TrackableProperty.PromisedGift, PlayerView.get(c.getPromisedGift()));
+    }
     public PlayerView getProtectingPlayer() {
         return get(TrackableProperty.ProtectingPlayer);
     }
@@ -561,12 +571,7 @@ public class CardView extends GameEntityView {
     public boolean canBeShownToAny(final Iterable<PlayerView> viewers) {
         if (viewers == null || Iterables.isEmpty(viewers)) { return true; }
 
-        return Iterables.any(viewers, new Predicate<PlayerView>() {
-            @Override
-            public final boolean apply(final PlayerView input) {
-                return canBeShownTo(input);
-            }
-        });
+        return Iterables.any(viewers, this::canBeShownTo);
     }
 
     public boolean canBeShownTo(final PlayerView viewer) {
@@ -632,12 +637,7 @@ public class CardView extends GameEntityView {
     public boolean canFaceDownBeShownToAny(final Iterable<PlayerView> viewers) {
         if (viewers == null || Iterables.isEmpty(viewers)) { return true; }
 
-        return Iterables.any(viewers, new Predicate<PlayerView>() {
-            @Override
-            public final boolean apply(final PlayerView input) {
-                return canFaceDownBeShownTo(input);
-            }
-        });
+        return Iterables.any(viewers, this::canFaceDownBeShownTo);
     }
 
     public boolean canFaceDownBeShownTo(final PlayerView viewer) {
@@ -1072,7 +1072,7 @@ public class CardView extends GameEntityView {
         if (hiddenId == null) {
             return getId();
         }
-        return hiddenId.intValue();
+        return hiddenId;
     }
     void updateHiddenId(final int hiddenId) {
         set(TrackableProperty.HiddenId, hiddenId);
@@ -1162,7 +1162,7 @@ public class CardView extends GameEntityView {
         return (zone + ' ' + CardTranslation.getTranslatedName(name) + " (" + getId() + ")").trim();
     }
 
-    public class CardStateView extends TrackableObject {
+    public class CardStateView extends TrackableObject implements ITranslatable {
         private static final long serialVersionUID = 6673944200513430607L;
 
         private final CardStateName state;
@@ -1313,6 +1313,13 @@ public class CardView extends GameEntityView {
         }
         void setOracleText(String oracleText) {
             set(TrackableProperty.OracleText, oracleText.replace("\\n", "\r\n\r\n").trim());
+        }
+
+        public String getFunctionalVariantName() {
+            return get(TrackableProperty.FunctionalVariant);
+        }
+        void setFunctionalVariantName(String functionalVariant) {
+            set(TrackableProperty.FunctionalVariant, functionalVariant);
         }
 
         public String getRulesText() {
@@ -1737,6 +1744,25 @@ public class CardView extends GameEntityView {
         }
         public boolean isAttraction() {
             return getType().isAttraction();
+        }
+
+        @Override
+        public String getTranslationKey() {
+            String key = getName();
+            String variant = getFunctionalVariantName();
+            if(StringUtils.isNotEmpty(variant))
+                key = key + " $" + variant;
+            return key;
+        }
+
+        @Override
+        public String getUntranslatedType() {
+            return getType().toString();
+        }
+
+        @Override
+        public String getUntranslatedOracle() {
+            return getOracleText();
         }
     }
 

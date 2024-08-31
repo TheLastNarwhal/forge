@@ -73,7 +73,7 @@ public class InventoryScene extends UIScene {
                                 }
                             }
                             String item = Current.player().itemInSlot(slotName);
-                            if (item != null && !item.equals("")) {
+                            if (item != null && !item.isEmpty()) {
                                 Button changeButton = null;
                                 for (Button invButton : inventoryButtons) {
                                     if (itemLocation.get(invButton) != null && itemLocation.get(invButton).equals(item)) {
@@ -161,7 +161,7 @@ public class InventoryScene extends UIScene {
             ConsoleCommandInterpreter.getInstance().command(data.commandOnUse);
         if (data.dialogOnUse != null && data.dialogOnUse.text != null && !data.dialogOnUse.text.isEmpty()) {
             MapDialog dialog = new MapDialog(data.dialogOnUse, MapStage.getInstance(),0,null);
-            MapStage.instance.showDialog();
+            MapStage.getInstance().showDialog();
             dialog.activate();
             ChangeListener listen = new ChangeListener() {
                 @Override
@@ -246,7 +246,7 @@ public class InventoryScene extends UIScene {
             if (Current.player().getShards() < data.shardsNeeded)
                 useButton.setDisabled(true);
 
-            if (data.equipmentSlot == null || data.equipmentSlot.equals("")) {
+            if (data.equipmentSlot == null || data.equipmentSlot.isEmpty()) {
                 equipButton.setDisabled(true);
             } else {
                 equipButton.setDisabled(false);
@@ -380,7 +380,7 @@ public class InventoryScene extends UIScene {
             if (slot.getValue().getChildren().size >= 2)
                 slot.getValue().removeActorAt(1, false);
             String equippedItem = Current.player().itemInSlot(slot.getKey());
-            if (equippedItem == null || equippedItem.equals(""))
+            if (equippedItem == null || equippedItem.isEmpty())
                 continue;
             ItemData item = ItemData.getItem(equippedItem);
             if (item != null) {

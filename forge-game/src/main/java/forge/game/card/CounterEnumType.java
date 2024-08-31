@@ -35,7 +35,7 @@ public enum CounterEnumType {
 
     LOYALTY("LOYAL", 198, 198, 198),
 
-    ACORN("ACORN", 139,69,19),
+    ACORN("ACORN", 139, 69, 19),
 
     AEGIS("AEGIS", 207, 207, 207),
 
@@ -50,19 +50,21 @@ public enum CounterEnumType {
     AWAKENING("AWAKE", 0, 231, 79),
 
     BLAZE("BLAZE", 255, 124, 82),
-    
+
     BLESSING("BLESS", 251, 0, 94),
+
+    BLIGHT("BLGHT", 130, 115, 160),
 
     BLOOD("BLOOD", 255, 108, 111),
 
     BLOODLINE("BLDLN", 224, 44, 44),
-    
+
     BLOODSTAIN("BLDST", 224, 44, 44),
 
     BORE("BORE", 98, 47, 34),
 
     BOUNTY("BOUNT", 255, 158, 0),
-    
+
     BRAIN("BRAIN", 197, 62, 212),
 
     BRIBERY("BRIBE", 172, 201, 235),
@@ -215,6 +217,8 @@ public enum CounterEnumType {
 
     INCARNATION("INCRN", 247, 206, 64),
 
+    INGREDIENT("INGRD", 180, 50, 145),
+    
     INFECTION("INFCT", 0, 230, 66),
     
     INFLUENCE("INFL", 201, 99, 212),
@@ -272,6 +276,8 @@ public enum CounterEnumType {
     MATRIX("MATRX", 183, 174, 255),
 
     MEMORY("MEMRY", 174, 183, 255),
+    
+    MIDWAY("MDWAY", 84, 101, 207),
 
     MINE("MINE", 255, 100, 127),
 
@@ -339,6 +345,8 @@ public enum CounterEnumType {
 
     QUEST("QUEST", 251, 189, 0),
 
+    RELEASE("RELEASE", 200, 210, 50),
+
     REPRIEVE("REPR", 240, 120, 50),
 
     REJECTION("REJECT", 212, 235, 242),
@@ -396,6 +404,8 @@ public enum CounterEnumType {
     STUDY("STUDY", 226, 192, 165),
 
     STUN("STUN", 226, 192, 165),
+
+    SUPPLY("SPPLY", 70, 105, 60),
 
     TAKEOVER("TKVR", 63, 49, 191),
 
